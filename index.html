@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mon Blog</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.css">
+<script src="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.js" defer></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+  import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyAf5L19V1ktK9wKGU87P30xNN9jde4-_Eg",
+    authDomain: "page-admin-tiracoon-blog.firebaseapp.com",
+    projectId: "page-admin-tiracoon-blog",
+    storageBucket: "page-admin-tiracoon-blog.firebasestorage.app",
+    messagingSenderId: "1091401553072",
+    appId: "1:1091401553072:web:0ddc04b952de5ed1225775"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+
+  async function loadArticles() {
+    const container = document.getElementById("articlesContainer");
+    const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    renderArticles(articles);
+    renderTagCloud(articles);
+  }
+
+  function renderArticles(articles) {
+    const container = document.getElementById("articlesContainer");
+    if (!articles.length) {
+      container.innerHTML = "<p>Aucun article pour le moment</p>";
+      return;
+    }
+    container.innerHTML = articles.map(a => `
+      <article class="article">
+        ${a.imageUrl ? `<img src="${a.imageUrl}" alt="${a.imageAlt}" class="article-main-img">` : ""}
+        <h2>${a.title}</h2>
+        <p>${a.excerpt || ""}</p>
+        <div class="article-content">${a.content}</div>
+        <p class="meta">Catégorie: ${a.category || "-"} | Tags: ${a.tags || "-"}</p>
+      </article>
+    `).join("");
+  }
+
+  function renderTagCloud(articles) {
+    const cloudContainer = document.getElementById("tagCloud");
+    const tagCounts = {};
+    articles.forEach(a => {
+      if (!a.tags) return;
+      a.tags.split(",").map(t => t.trim()).forEach(tag => {
+        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      });
+    });
+    const maxCount = Math.max(...Object.values(tagCounts), 1);
+    cloudContainer.innerHTML = Object.entries(tagCounts).map(([tag, count]) => {
+      const size = 12 + 16 * (count / maxCount);
+      return `<span class="tag" style="font-size:${size}px;" onclick="filterByTag('${tag}')">${tag}</span>`;
+    }).join(" ");
+  }
+
+  window.filterByTag = async function(tag) {
+    const container = document.getElementById("articlesContainer");
+    const q = query(collection(db, "articles"), orderBy("createdAt", "desc"));
+    const snapshot = await getDocs(q);
+    const articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(a => a.tags && a.tags.split(",").map(t => t.trim()).includes(tag));
+    renderArticles(articles);
+  }
+
+  document.addEventListener("DOMContentLoaded", loadArticles);
+</script>
+<style>
+body { font-family: 'Lexend', sans-serif; background: linear-gradient(135deg, #4a4a4a 0%, #4a4a4a 14.28%, #22c55e 14.28%, #22c55e 28.56%, #3b82f6 28.56%, #3b82f6 42.84%, #ffffff 42.84%, #ffffff 57.12%, #fbbf24 57.12%, #fbbf24 71.4%, #dc2626 71.4%, #dc2626 85.68%, #4a4a4a 85.68%, #4a4a4a 100%); background-attachment: fixed; background-repeat: no-repeat; background-size: cover; color:#1a1a1a; padding: 20px;}
+h1,h2,h3 { margin: 0.5em 0; }
+.article-main-img { max-width:100%; display:block; margin-bottom: 10px; }
+.article { margin-bottom:2em; padding:1em; border:1px solid #e5e5e5; background:#fff; border-radius:8px; }
+.tag { cursor:pointer; margin:0 5px; color:#1a1a1a; }
+</style>
+</head>
+<body>
+<header>
+<h1 id="blogTitle">Mon Blog</h1>
+<h2 id="blogSubtitle">Partagez vos idées avec le monde</h2>
+<p id="blogIntro">Bienvenue sur le blog</p>
+</header>
+
+<section id="articlesContainer"></section>
+
+<section id="tagCloud"></section>
+</body>
+</html>
