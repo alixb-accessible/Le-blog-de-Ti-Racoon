@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Blog</title>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.css">
+<script src="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.js" defer></script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, updateDoc, doc, getDocs } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAf5L19V1ktK9wKGU87P30xNN9jde4-_Eg",
+  authDomain: "page-admin-tiracoon-blog.firebaseapp.com",
+  projectId: "page-admin-tiracoon-blog",
+  storageBucket: "page-admin-tiracoon-blog.firebasestorage.app",
+  messagingSenderId: "1091401553072",
+  appId: "1:1091401553072:web:0ddc04b952de5ed1225775"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, user => {
+  if(user) {
+    document.getElementById("loginSection").style.display = "none";
+    document.getElementById("adminSection").style.display = "block";
+    loadArticles();
+  } else {
+    document.getElementById("loginSection").style.display = "block";
+    document.getElementById("adminSection").style.display = "none";
+  }
+});
+
+async function login() {
+  const email = document.getElementById("email").value;
+  const pwd = document.getElementById("password").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+  } catch(e) { alert(e.message); }
+}
+
+async function addArticle() {
+  const data = {
+    title: document.getElementById("titleInput").value,
+    excerpt: document.getElementById("excerptInput").value,
+    content: document.getElementById("contentInput").value,
+    category: document.getElementById("categoryInput").value,
+    tags: document.getElementById("tagsInput").value,
+    imageUrl: document.getElementById("imageUrlInput").value,
+    imageAlt: document.getElementById("imageAltInput").value,
+    createdAt: new Date().toISOString()
+  };
+  await addDoc(collection(db, "articles"), data);
+  loadArticles();
+}
+
+async function loadArticles() {
+  const container = document.getElementById("articlesList");
+  container.innerHTML = "";
+  const snapshot = await getDocs(collection(db,"articles"));
+  snapshot.docs.forEach(docu => {
+    const data = docu.data();
+    const el = document.createElement("div");
+    el.innerHTML = `<strong>${data.title}</strong> (${data.category || "-"}) <button onclick="editArticle('${docu.id}')">Modifier</button>`;
+    container.appendChild(el);
+  });
+}
+
+async function editArticle(id) {
+  const docRef = doc(db,"articles",id);
+  const docSnap = await getDocs(collection(db,"articles"));
+  // Pour simplifier : on charge l'article dans le formulaire pour édition
+  // On pourrait compléter avec updateDoc
+}
+</script>
+<style>
+body { font-family:'Lexend', sans-serif; background:#f5f5f5; padding:20px; color:#1a1a1a; }
+input, textarea, button { margin:5px 0; font-family:'Lexend',sans-serif; }
+</style>
+</head>
+<body>
+<section id="loginSection">
+<h2>Connexion Admin</h2>
+<input type="email" id="email" placeholder="Email"><br>
+<input type="password" id="password" placeholder="Mot de passe"><br>
+<button onclick="login()">Se connecter</button>
+</section>
+
+<section id="adminSection" style="display:none;">
+<h1>Administration du Blog</h1>
+<h2>Ajouter un article</h2>
+<label>Titre</label><br><input id="titleInput"><br>
+<label>Extrait</label><br><textarea id="excerptInput"></textarea><br>
+<label>Contenu</label><br><textarea id="contentInput"></textarea><br>
+<label>Catégorie</label><br><input id="categoryInput"><br>
+<label>Tags</label><br><input id="tagsInput"><br>
+<label>Image principale URL</label><br><input id="imageUrlInput"><br>
+<label>Alt de l'image</label><br><input id="imageAltInput"><br>
+<button onclick="addArticle()">Ajouter l'article</button>
+<h2>Articles existants</h2>
+<div id="articlesList"></div>
+</section>
+</body>
+</html>
