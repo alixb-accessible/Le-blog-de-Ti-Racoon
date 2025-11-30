@@ -2,136 +2,88 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title id="blog-title">Mon Blog</title>
-
-  <!-- Police Lexend -->
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;600;700&display=swap" rel="stylesheet">
-
-  <!-- Barre d’accessibilité Faites-Mieux -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon Blog</title>
+  <!-- Toolbar d'accessibilité Faites Mieux -->
   <link rel="stylesheet" href="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.css">
   <script src="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.js" defer></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com" defer></script>
+  <!-- Police Lexend -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 
-  <!-- Fond Pride Handi -->
+    const firebaseConfig = {
+      apiKey: "AIzaSyAf5L19V1ktK9wKGU87P30xNN9jde4-_Eg",
+      authDomain: "page-admin-tiracoon-blog.firebaseapp.com",
+      projectId: "page-admin-tiracoon-blog",
+      storageBucket: "page-admin-tiracoon-blog.firebasestorage.app",
+      messagingSenderId: "1091401553072",
+      appId: "1:1091401553072:web:0ddc04b952de5ed1225775"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    window.db = db; // pour que blog.js puisse accéder
+  </script>
+  <script type="module" src="blog.js" defer></script>
   <style>
     body {
-      font-family: "Lexend", sans-serif;
-      margin: 0;
-      padding: 0;
+      font-family: 'Lexend', sans-serif;
       box-sizing: border-box;
-      background: linear-gradient(
-        135deg,
+      min-height: 100%;
+      background: linear-gradient(135deg,
         #4a4a4a 0%, #4a4a4a 14.28%,
         #22c55e 14.28%, #22c55e 28.56%,
         #3b82f6 28.56%, #3b82f6 42.84%,
         #ffffff 42.84%, #ffffff 57.12%,
         #fbbf24 57.12%, #fbbf24 71.4%,
         #dc2626 71.4%, #dc2626 85.68%,
-        #4a4a4a 85.68%, #4a4a4a 100%
-      );
+        #4a4a4a 85.68%, #4a4a4a 100%);
       background-attachment: fixed;
       background-repeat: no-repeat;
       background-size: cover;
-      min-height: 100%;
-    }
-    .container {
-      max-width: 900px;
-      background: white;
-      padding: 30px;
-      margin: 40px auto;
-      border-radius: 20px;
-    }
-    h1 {
-      font-size: 42px;
-      margin-bottom: 10px;
-    }
-    .subtitle {
-      font-size: 22px;
-      margin-bottom: 20px;
-      color: #555;
-    }
-    .article {
-      border-bottom: 1px solid #ddd;
-      padding-bottom: 20px;
-      margin-bottom: 20px;
-    }
-    .article img {
-      max-width: 100%;
-      border-radius: 10px;
-      margin-top: 10px;
-    }
-    .tag-cloud span {
-      display: inline-block;
-      margin: 5px;
-      padding: 5px 12px;
-      background: #eee;
-      border-radius: 50px;
-      font-size: 14px;
-      cursor: pointer;
-    }
-    .archive-item {
-      cursor: pointer;
-      color: #000;
-      font-size: 16px;
-      margin: 4px 0;
     }
   </style>
 </head>
+<body class="p-6">
 
-<body>
+  <!-- Header / Titre du blog -->
+  <header class="mb-6">
+    <h1 id="blog-title" class="text-4xl font-bold mb-2">Mon Blog</h1>
+    <h2 id="blog-subtitle" class="text-xl text-gray-700">Partagez vos idées avec le monde</h2>
+    <p id="blog-presentation" class="mt-2 text-gray-600">Bienvenue sur mon blog !</p>
+  </header>
 
-  <div class="container">
-
-    <!-- TITRES (modifiables dans admin) -->
-    <h1 id="main-title">Mon Blog</h1>
-    <p class="subtitle" id="subtitle">Partagez vos idées avec le monde</p>
-
-    <!-- Présentation du blog (modifiable dans admin) -->
-    <p id="presentation">
-      Bienvenue sur mon blog. Ici je partage mes idées, travaux et réflexions.
-    </p>
-
-    <!-- BARRE DE RECHERCHE -->
-    <input type="text" id="search" placeholder="Rechercher un article…" style="width:100%;padding:10px;margin:20px 0;">
-
-    <!-- CATEGORIES ET TRI -->
-    <div>
-      <label>Catégorie :</label>
-      <select id="category-filter">
+  <!-- Recherche et filtres -->
+  <div class="mb-6">
+    <input id="search-input" type="text" placeholder="Rechercher un article…" class="border p-2 w-full mb-2">
+    <div class="flex gap-2 flex-wrap">
+      <select id="category-filter" class="border p-2">
         <option value="">Toutes les catégories</option>
       </select>
-
-      <label style="margin-left:20px;">Trier par :</label>
-      <select id="sort-order">
-        <option value="desc">Plus récents</option>
-        <option value="asc">Plus anciens</option>
+      <select id="sort-filter" class="border p-2">
+        <option value="recent">Plus récents</option>
       </select>
     </div>
-
-    <hr style="margin:25px 0;">
-
-    <!-- LISTE D’ARTICLES -->
-    <div id="articles"></div>
-
-    <hr style="margin:25px 0;">
-
-    <!-- NUAGE DE TAGS -->
-    <h2>Tags</h2>
-    <div class="tag-cloud" id="tag-cloud"></div>
-
-    <hr style="margin:25px 0;">
-
-    <!-- ARCHIVES -->
-    <h2>Archives</h2>
-    <div id="archives"></div>
-
-    <hr style="margin:25px 0;">
-
-    <!-- LIEN ADMIN -->
-    <a href="admin.html" style="font-size:18px;font-weight:600;">🔐 Accéder à l’administration</a>
   </div>
 
-  <!-- SCRIPT FIREBASE + BLOG -->
-  <script type="module" src="blog.js"></script>
+  <!-- Nuage de mots (tags) -->
+  <div id="tag-cloud" class="mb-6 flex flex-wrap gap-2"></div>
+
+  <!-- Articles -->
+  <main id="articles-container" class="space-y-8">
+    <!-- Les articles seront injectés ici par blog.js -->
+  </main>
+
+  <!-- Archivage -->
+  <footer class="mt-12">
+    <h3 class="text-lg font-bold">Archives</h3>
+    <ul id="archives-list" class="list-disc ml-6"></ul>
+  </footer>
 
 </body>
 </html>
