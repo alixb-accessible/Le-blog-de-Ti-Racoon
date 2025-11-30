@@ -4,18 +4,25 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mon Blog</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Lexend Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
+
   <!-- Toolbar d'accessibilité Faites Mieux -->
   <link rel="stylesheet" href="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.css">
   <script src="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.js" defer></script>
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com" defer></script>
-  <!-- Police Lexend -->
-  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;700&display=swap" rel="stylesheet">
-  <!-- Firebase SDK -->
+
+  <!-- CSS custom -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Firebase -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, orderBy, query } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
+    
     const firebaseConfig = {
       apiKey: "AIzaSyAf5L19V1ktK9wKGU87P30xNN9jde4-_Eg",
       authDomain: "page-admin-tiracoon-blog.firebaseapp.com",
@@ -26,64 +33,57 @@
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    window.db = db; // pour que blog.js puisse accéder
-  </script>
-  <script type="module" src="blog.js" defer></script>
-  <style>
-    body {
-      font-family: 'Lexend', sans-serif;
-      box-sizing: border-box;
-      min-height: 100%;
-      background: linear-gradient(135deg,
-        #4a4a4a 0%, #4a4a4a 14.28%,
-        #22c55e 14.28%, #22c55e 28.56%,
-        #3b82f6 28.56%, #3b82f6 42.84%,
-        #ffffff 42.84%, #ffffff 57.12%,
-        #fbbf24 57.12%, #fbbf24 71.4%,
-        #dc2626 71.4%, #dc2626 85.68%,
-        #4a4a4a 85.68%, #4a4a4a 100%);
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-      background-size: cover;
-    }
-  </style>
-</head>
-<body class="p-6">
+    const auth = getAuth(app);
 
-  <!-- Header / Titre du blog -->
-  <header class="mb-6">
-    <h1 id="blog-title" class="text-4xl font-bold mb-2">Mon Blog</h1>
-    <h2 id="blog-subtitle" class="text-xl text-gray-700">Partagez vos idées avec le monde</h2>
-    <p id="blog-presentation" class="mt-2 text-gray-600">Bienvenue sur mon blog !</p>
+    onAuthStateChanged(auth, user => {
+      // Exemple pour afficher un bouton admin si connecté
+      if(user){
+        document.getElementById('admin-link').classList.remove('hidden');
+      }
+    });
+  </script>
+
+  <!-- Blog JS -->
+  <script src="blog.js" defer></script>
+</head>
+<body class="font-lexend min-h-screen" style="background: linear-gradient(135deg, #4a4a4a 0%, #4a4a4a 14.28%, #22c55e 14.28%, #22c55e 28.56%, #3b82f6 28.56%, #3b82f6 42.84%, #ffffff 42.84%, #ffffff 57.12%, #fbbf24 57.12%, #fbbf24 71.4%, #dc2626 71.4%, #dc2626 85.68%, #4a4a4a 85.68%, #4a4a4a 100%); background-attachment: fixed; background-repeat: no-repeat; background-size: cover;">
+
+  <!-- Header -->
+  <header class="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-opacity-80 bg-white/50">
+    <div class="flex flex-col md:flex-row md:items-center">
+      <h1 class="text-4xl font-bold mr-4">Mon Blog</h1>
+      <p class="text-xl text-gray-700">Partagez vos idées avec le monde</p>
+    </div>
+    <a href="admin.html" id="admin-link" class="hidden px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mt-4 md:mt-0">Admin</a>
   </header>
 
-  <!-- Recherche et filtres -->
-  <div class="mb-6">
-    <input id="search-input" type="text" placeholder="Rechercher un article…" class="border p-2 w-full mb-2">
-    <div class="flex gap-2 flex-wrap">
-      <select id="category-filter" class="border p-2">
-        <option value="">Toutes les catégories</option>
-      </select>
-      <select id="sort-filter" class="border p-2">
-        <option value="recent">Plus récents</option>
-      </select>
-    </div>
-  </div>
+  <!-- Présentation -->
+  <section id="presentation" class="p-6 text-lg text-gray-800">
+    Bienvenue sur mon blog !
+  </section>
 
-  <!-- Nuage de mots (tags) -->
-  <div id="tag-cloud" class="mb-6 flex flex-wrap gap-2"></div>
+  <!-- Sidebar -->
+  <aside class="p-6 md:w-64 float-left">
+    <input type="text" placeholder="Rechercher un article…" class="w-full p-2 mb-4 border rounded">
+    <h3 class="font-semibold mb-2">Toutes les catégories</h3>
+    <ul id="categories" class="mb-4">
+      <!-- Categories injected from blog.js -->
+    </ul>
+    <h3 class="font-semibold mb-2">Trier par</h3>
+    <select id="sort" class="w-full p-2 border rounded mb-4">
+      <option value="recent">Plus récents</option>
+      <option value="oldest">Les plus anciens</option>
+    </select>
+    <h3 class="font-semibold mb-2">Archives</h3>
+    <ul id="archives">
+      <!-- Archives injected from blog.js -->
+    </ul>
+  </aside>
 
   <!-- Articles -->
-  <main id="articles-container" class="space-y-8">
-    <!-- Les articles seront injectés ici par blog.js -->
+  <main class="md:ml-72 p-6" id="articles">
+    <!-- Articles injected from blog.js -->
   </main>
-
-  <!-- Archivage -->
-  <footer class="mt-12">
-    <h3 class="text-lg font-bold">Archives</h3>
-    <ul id="archives-list" class="list-disc ml-6"></ul>
-  </footer>
 
 </body>
 </html>
