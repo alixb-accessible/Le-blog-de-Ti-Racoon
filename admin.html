@@ -2,161 +2,262 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Admin Blog Ti Racoon</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration - Ti Racoon Blog</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Lexend Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
+  
   <!-- Toolbar d'accessibilité Faites Mieux -->
   <link rel="stylesheet" href="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.css">
   <script src="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.js" defer></script>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
-    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAf5L19V1ktK9wKGU87P30xNN9jde4-_Eg",
-      authDomain: "page-admin-tiracoon-blog.firebaseapp.com",
-      projectId: "page-admin-tiracoon-blog",
-      storageBucket: "page-admin-tiracoon-blog.firebasestorage.app",
-      messagingSenderId: "1091401553072",
-      appId: "1:1091401553072:web:0ddc04b952de5ed1225775"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-
-    const loginForm = document.getElementById("login-form");
-    const adminPanel = document.getElementById("admin-panel");
-    const statusDiv = document.getElementById("status");
-
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const email = loginForm.email.value;
-      const password = loginForm.password.value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-        statusDiv.textContent = "Connecté !";
-      } catch (err) {
-        statusDiv.textContent = "Erreur connexion : " + err.message;
-      }
-    });
-
-    onAuthStateChanged(auth, user => {
-      if (user) {
-        loginForm.style.display = "none";
-        adminPanel.style.display = "block";
-        loadArticles();
-        loadBlogInfo();
-      } else {
-        loginForm.style.display = "block";
-        adminPanel.style.display = "none";
-      }
-    });
-
-    // Gestion blog info
-    const blogTitleInput = document.getElementById("blog-title");
-    const blogSubtitleInput = document.getElementById("blog-subtitle");
-    const blogIntroInput = document.getElementById("blog-intro");
-    const saveBlogInfoBtn = document.getElementById("save-blog-info");
-
-    saveBlogInfoBtn.addEventListener("click", async () => {
-      const infoRef = collection(db, "blogInfo");
-      const snapshot = await getDocs(infoRef);
-      if (!snapshot.empty) {
-        const docRef = doc(db, "blogInfo", snapshot.docs[0].id);
-        await updateDoc(docRef, {
-          title: blogTitleInput.value,
-          subtitle: blogSubtitleInput.value,
-          intro: blogIntroInput.value
-        });
-      } else {
-        await addDoc(infoRef, {
-          title: blogTitleInput.value,
-          subtitle: blogSubtitleInput.value,
-          intro: blogIntroInput.value
-        });
-      }
-      alert("Blog mis à jour !");
-    });
-
-    // Gestion articles
-    const articleForm = document.getElementById("article-form");
-    const articlesList = document.getElementById("articles-list");
-
-    articleForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = {
-        title: articleForm.title.value,
-        subtitle: articleForm.subtitle.value,
-        content: articleForm.content.value,
-        mainImageUrl: articleForm.mainImageUrl.value,
-        tags: articleForm.tags.value.split(",").map(s=>s.trim()),
-        date: new Date()
-      };
-      await addDoc(collection(db, "articles"), data);
-      articleForm.reset();
-      loadArticles();
-    });
-
-    async function loadArticles() {
-      articlesList.innerHTML = "";
-      const snapshot = await getDocs(collection(db, "articles"));
-      snapshot.forEach(docSnap => {
-        const a = docSnap.data();
-        const div = document.createElement("div");
-        div.classList.add("mb-4", "p-2", "border", "rounded");
-        div.innerHTML = `<strong>${a.title}</strong> <button data-id="${docSnap.id}" class="delete-btn ml-2 text-red-600">Supprimer</button>`;
-        articlesList.appendChild(div);
-      });
-      document.querySelectorAll(".delete-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          await deleteDoc(doc(db, "articles", btn.dataset.id));
-          loadArticles();
-        });
-      });
+  
+  <style>
+    body {
+      font-family: 'Lexend', sans-serif;
     }
-
-    async function loadBlogInfo() {
-      const snapshot = await getDocs(collection(db, "blogInfo"));
-      if (!snapshot.empty) {
-        const data = snapshot.docs[0].data();
-        blogTitleInput.value = data.title || "";
-        blogSubtitleInput.value = data.subtitle || "";
-        blogIntroInput.value = data.intro || "";
-      }
+    .editor-toolbar {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.5rem;
     }
-
-  </script>
+    .editor-btn {
+      padding: 0.5rem 1rem;
+      border: 1px solid #d1d5db;
+      background: white;
+      border-radius: 0.25rem;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .editor-btn:hover {
+      background: #f3f4f6;
+    }
+    .editor-btn:focus {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+  </style>
 </head>
-<body class="bg-gray-100 min-h-screen p-6">
-  <h1 class="text-4xl font-bold mb-6">Admin Blog Ti Racoon</h1>
-  <div id="status" class="mb-4 text-red-600"></div>
+<body class="bg-gray-100 min-h-screen">
+  
+  <div class="container mx-auto px-4 py-6 max-w-4xl">
+    
+    <header class="mb-6">
+      <h1 class="text-4xl font-bold mb-2">Administration - Ti Racoon Blog</h1>
+      <a href="index.html" class="text-blue-600 hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500">
+        Retour au blog
+      </a>
+    </header>
 
-  <form id="login-form" class="mb-6">
-    <input type="email" name="email" placeholder="Email" required class="border p-2 mb-2">
-    <input type="password" name="password" placeholder="Mot de passe" required class="border p-2 mb-2">
-    <button type="submit" class="bg-blue-600 text-white p-2 rounded">Se connecter</button>
-  </form>
+    <div id="status" class="mb-4 p-3 rounded hidden" role="alert"></div>
 
-  <div id="admin-panel" style="display:none;">
-    <h2 class="text-2xl font-bold mb-2">Infos du blog</h2>
-    <input id="blog-title" placeholder="Titre du blog" class="border p-2 mb-2 w-full">
-    <input id="blog-subtitle" placeholder="Sous-titre" class="border p-2 mb-2 w-full">
-    <textarea id="blog-intro" placeholder="Présentation du blog" class="border p-2 mb-2 w-full"></textarea>
-    <button id="save-blog-info" class="bg-green-600 text-white p-2 rounded mb-6">Sauvegarder</button>
+    <!-- Formulaire de connexion -->
+    <section id="login-section" class="bg-white p-6 rounded-lg shadow-md mb-6">
+      <h2 class="text-2xl font-bold mb-4">Connexion</h2>
+      <form id="login-form">
+        <div class="mb-4">
+          <label for="email" class="block font-semibold mb-2">Email</label>
+          <input 
+            type="email" 
+            id="email" 
+            name="email" 
+            required 
+            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div class="mb-4">
+          <label for="password" class="block font-semibold mb-2">Mot de passe</label>
+          <input 
+            type="password" 
+            id="password" 
+            name="password" 
+            required 
+            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <button 
+          type="submit" 
+          class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+        >
+          Se connecter
+        </button>
+      </form>
+    </section>
 
-    <h2 class="text-2xl font-bold mb-2">Ajouter un article</h2>
-    <form id="article-form" class="mb-6">
-      <input name="title" placeholder="Titre article" class="border p-2 mb-2 w-full" required>
-      <input name="subtitle" placeholder="Sous-titre article" class="border p-2 mb-2 w-full">
-      <input name="mainImageUrl" placeholder="URL image principale" class="border p-2 mb-2 w-full">
-      <textarea name="content" placeholder="Contenu HTML de l'article" class="border p-2 mb-2 w-full" required></textarea>
-      <input name="tags" placeholder="Tags (séparés par virgule)" class="border p-2 mb-2 w-full">
-      <button type="submit" class="bg-blue-600 text-white p-2 rounded">Ajouter l'article</button>
-    </form>
+    <!-- Panel d'administration (caché par défaut) -->
+    <div id="admin-panel" style="display:none;">
+      
+      <!-- Informations du blog -->
+      <section class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 class="text-2xl font-bold mb-4">Informations du blog</h2>
+        <div class="mb-4">
+          <label for="blog-title" class="block font-semibold mb-2">Titre du blog</label>
+          <input 
+            type="text" 
+            id="blog-title" 
+            placeholder="Titre du blog" 
+            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div class="mb-4">
+          <label for="blog-subtitle" class="block font-semibold mb-2">Sous-titre</label>
+          <input 
+            type="text" 
+            id="blog-subtitle" 
+            placeholder="Sous-titre" 
+            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+        </div>
+        <div class="mb-4">
+          <label for="blog-intro" class="block font-semibold mb-2">Présentation du blog</label>
+          <textarea 
+            id="blog-intro" 
+            placeholder="Présentation du blog" 
+            rows="3"
+            class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          ></textarea>
+        </div>
+        <button 
+          id="save-blog-info" 
+          class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+        >
+          Sauvegarder les informations
+        </button>
+      </section>
 
-    <h2 class="text-2xl font-bold mb-2">Articles existants</h2>
-    <div id="articles-list"></div>
+      <!-- Ajouter un article -->
+      <section class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 class="text-2xl font-bold mb-4">Ajouter un article</h2>
+        <form id="article-form">
+          
+          <div class="mb-4">
+            <label for="article-title" class="block font-semibold mb-2">Titre de l'article</label>
+            <input 
+              type="text" 
+              id="article-title" 
+              name="title" 
+              required 
+              placeholder="Titre de l'article"
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+
+          <div class="mb-4">
+            <label for="article-subtitle" class="block font-semibold mb-2">Sous-titre (optionnel)</label>
+            <input 
+              type="text" 
+              id="article-subtitle" 
+              name="subtitle" 
+              placeholder="Sous-titre de l'article"
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+
+          <div class="mb-4">
+            <label for="article-image" class="block font-semibold mb-2">URL de l'image principale (optionnel)</label>
+            <input 
+              type="url" 
+              id="article-image" 
+              name="mainImageUrl" 
+              placeholder="https://exemple.com/image.jpg"
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+
+          <div class="mb-4">
+            <label for="article-image-alt" class="block font-semibold mb-2">Description de l'image (alt text)</label>
+            <input 
+              type="text" 
+              id="article-image-alt" 
+              name="mainImageAlt" 
+              placeholder="Description de l'image pour l'accessibilité"
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <p class="text-sm text-gray-600 mt-1">Important pour l'accessibilité : décrivez ce que montre l'image</p>
+          </div>
+
+          <div class="mb-4">
+            <label for="article-content" class="block font-semibold mb-2">Contenu de l'article</label>
+            
+            <!-- Barre d'outils de formatage -->
+            <div class="editor-toolbar">
+              <button type="button" class="editor-btn" data-format="h2" title="Titre niveau 2" aria-label="Insérer un titre de niveau 2">
+                <strong>H2</strong>
+              </button>
+              <button type="button" class="editor-btn" data-format="h3" title="Titre niveau 3" aria-label="Insérer un titre de niveau 3">
+                <strong>H3</strong>
+              </button>
+              <button type="button" class="editor-btn" data-format="bold" title="Gras" aria-label="Mettre en gras">
+                <strong>Gras</strong>
+              </button>
+              <button type="button" class="editor-btn" data-format="italic" title="Italique" aria-label="Mettre en italique">
+                <em>Italique</em>
+              </button>
+              <button type="button" class="editor-btn" data-format="link" title="Lien" aria-label="Insérer un lien">
+                Lien
+              </button>
+              <button type="button" class="editor-btn" data-format="image" title="Image" aria-label="Insérer une image">
+                Image
+              </button>
+              <button type="button" class="editor-btn" data-format="ul" title="Liste à puces" aria-label="Insérer une liste à puces">
+                Liste
+              </button>
+              <button type="button" class="editor-btn" data-format="p" title="Paragraphe" aria-label="Insérer un paragraphe">
+                Paragraphe
+              </button>
+            </div>
+
+            <textarea 
+              id="article-content" 
+              name="content" 
+              required 
+              rows="12"
+              placeholder="Écrivez votre article ici. Utilisez les boutons ci-dessus pour ajouter du formatage."
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+            ></textarea>
+            <p class="text-sm text-gray-600 mt-1">
+              Utilisez les boutons pour insérer du HTML. Vous pouvez aussi écrire directement en HTML.
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <label for="article-tags" class="block font-semibold mb-2">Tags (séparés par des virgules)</label>
+            <input 
+              type="text" 
+              id="article-tags" 
+              name="tags" 
+              placeholder="accessibilité, technologie, société"
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+          </div>
+
+          <button 
+            type="submit" 
+            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
+            Publier l'article
+          </button>
+        </form>
+      </section>
+
+      <!-- Liste des articles existants -->
+      <section class="bg-white p-6 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold mb-4">Articles existants</h2>
+        <div id="articles-list" class="space-y-3">
+          <!-- Articles listés dynamiquement -->
+        </div>
+      </section>
+
+    </div>
+
   </div>
+
+  <!-- Script d'administration -->
+  <script type="module" src="admin.js"></script>
+
 </body>
 </html>
