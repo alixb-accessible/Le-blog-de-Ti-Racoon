@@ -3,87 +3,127 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mon Blog</title>
-
+  <title>Ti Racoon Blog</title>
+  
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
-
+  
   <!-- Lexend Font -->
   <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@400;600;700&display=swap" rel="stylesheet">
-
+  
   <!-- Toolbar d'accessibilité Faites Mieux -->
   <link rel="stylesheet" href="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.css">
   <script src="https://alixb-accessible.github.io/faites-mieux-toolbar/faites-mieux.js" defer></script>
-
-  <!-- CSS custom -->
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Firebase -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
-    
-    const firebaseConfig = {
-      apiKey: "AIzaSyAf5L19V1ktK9wKGU87P30xNN9jde4-_Eg",
-      authDomain: "page-admin-tiracoon-blog.firebaseapp.com",
-      projectId: "page-admin-tiracoon-blog",
-      storageBucket: "page-admin-tiracoon-blog.firebasestorage.app",
-      messagingSenderId: "1091401553072",
-      appId: "1:1091401553072:web:0ddc04b952de5ed1225775"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    onAuthStateChanged(auth, user => {
-      // Exemple pour afficher un bouton admin si connecté
-      if(user){
-        document.getElementById('admin-link').classList.remove('hidden');
-      }
-    });
-  </script>
-
-  <!-- Blog JS -->
-  <script src="blog.js" defer></script>
+  
+  <style>
+    body {
+      font-family: 'Lexend', sans-serif;
+    }
+    .pride-bg {
+      background: linear-gradient(135deg, 
+        #4a4a4a 0%, #4a4a4a 14.28%,
+        #22c55e 14.28%, #22c55e 28.56%,
+        #3b82f6 28.56%, #3b82f6 42.84%,
+        #ffffff 42.84%, #ffffff 57.12%,
+        #fbbf24 57.12%, #fbbf24 71.4%,
+        #dc2626 71.4%, #dc2626 85.68%,
+        #4a4a4a 85.68%, #4a4a4a 100%);
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      background-size: cover;
+    }
+    .content-overlay {
+      background-color: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+    }
+  </style>
 </head>
-<body class="font-lexend min-h-screen" style="background: linear-gradient(135deg, #4a4a4a 0%, #4a4a4a 14.28%, #22c55e 14.28%, #22c55e 28.56%, #3b82f6 28.56%, #3b82f6 42.84%, #ffffff 42.84%, #ffffff 57.12%, #fbbf24 57.12%, #fbbf24 71.4%, #dc2626 71.4%, #dc2626 85.68%, #4a4a4a 85.68%, #4a4a4a 100%); background-attachment: fixed; background-repeat: no-repeat; background-size: cover;">
-
+<body class="pride-bg min-h-screen">
+  
   <!-- Header -->
-  <header class="flex flex-col md:flex-row justify-between items-start md:items-center p-6 bg-opacity-80 bg-white/50">
-    <div class="flex flex-col md:flex-row md:items-center">
-      <h1 class="text-4xl font-bold mr-4">Mon Blog</h1>
-      <p class="text-xl text-gray-700">Partagez vos idées avec le monde</p>
+  <header class="content-overlay shadow-md">
+    <div class="container mx-auto px-4 py-6">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 id="blog-title" class="text-4xl font-bold text-gray-900">Ti Racoon Blog</h1>
+          <p id="blog-subtitle" class="text-xl text-gray-700 mt-1">Partagez vos idées avec le monde</p>
+        </div>
+        <a href="admin.html" id="admin-link" class="hidden px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+          Administration
+        </a>
+      </div>
     </div>
-    <a href="admin.html" id="admin-link" class="hidden px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 mt-4 md:mt-0">Admin</a>
   </header>
 
-  <!-- Présentation -->
-  <section id="presentation" class="p-6 text-lg text-gray-800">
-    Bienvenue sur mon blog !
+  <!-- Présentation du blog -->
+  <section class="content-overlay mt-6 mx-4 md:mx-8 p-6 rounded-lg shadow-md">
+    <p id="blog-intro" class="text-lg text-gray-800">
+      Bienvenue sur mon blog !
+    </p>
   </section>
 
-  <!-- Sidebar -->
-  <aside class="p-6 md:w-64 float-left">
-    <input type="text" placeholder="Rechercher un article…" class="w-full p-2 mb-4 border rounded">
-    <h3 class="font-semibold mb-2">Toutes les catégories</h3>
-    <ul id="categories" class="mb-4">
-      <!-- Categories injected from blog.js -->
-    </ul>
-    <h3 class="font-semibold mb-2">Trier par</h3>
-    <select id="sort" class="w-full p-2 border rounded mb-4">
-      <option value="recent">Plus récents</option>
-      <option value="oldest">Les plus anciens</option>
-    </select>
-    <h3 class="font-semibold mb-2">Archives</h3>
-    <ul id="archives">
-      <!-- Archives injected from blog.js -->
-    </ul>
-  </aside>
+  <!-- Conteneur principal avec sidebar et articles -->
+  <div class="container mx-auto px-4 py-6">
+    <div class="flex flex-col lg:flex-row gap-6">
+      
+      <!-- Sidebar -->
+      <aside class="lg:w-64 flex-shrink-0">
+        <div class="content-overlay p-4 rounded-lg shadow-md sticky top-4">
+          
+          <!-- Recherche -->
+          <div class="mb-6">
+            <label for="search-input" class="block font-semibold mb-2 text-gray-900">Rechercher</label>
+            <input 
+              type="text" 
+              id="search-input" 
+              placeholder="Rechercher un article…" 
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Rechercher un article"
+            >
+          </div>
 
-  <!-- Articles -->
-  <main class="md:ml-72 p-6" id="articles">
-    <!-- Articles injected from blog.js -->
-  </main>
+          <!-- Nuage de tags -->
+          <div class="mb-6">
+            <h2 class="font-semibold mb-2 text-gray-900">Tags</h2>
+            <div id="tags-cloud" class="flex flex-wrap gap-2">
+              <!-- Tags générés dynamiquement -->
+            </div>
+          </div>
+
+          <!-- Tri -->
+          <div class="mb-6">
+            <label for="sort-select" class="block font-semibold mb-2 text-gray-900">Trier par</label>
+            <select 
+              id="sort-select" 
+              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              aria-label="Trier les articles"
+            >
+              <option value="recent">Plus récents</option>
+              <option value="oldest">Les plus anciens</option>
+            </select>
+          </div>
+
+        </div>
+      </aside>
+
+      <!-- Articles -->
+      <main class="flex-1">
+        <div id="loading" class="content-overlay p-6 rounded-lg shadow-md text-center">
+          <p class="text-gray-600">Chargement des articles...</p>
+        </div>
+        <div id="articles" class="space-y-6">
+          <!-- Articles générés dynamiquement -->
+        </div>
+        <div id="no-articles" class="content-overlay p-6 rounded-lg shadow-md text-center hidden">
+          <p class="text-gray-600">Aucun article pour le moment.</p>
+        </div>
+      </main>
+
+    </div>
+  </div>
+
+  <!-- Script du blog -->
+  <script type="module" src="blog.js"></script>
 
 </body>
 </html>
