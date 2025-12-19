@@ -88,7 +88,6 @@
             name="password" 
             required 
             class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="••••••••"
           >
         </div>
         <button 
@@ -107,7 +106,7 @@
       <div class="mb-6 text-right">
         <button 
           id="logout-btn"
-          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+          class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
         >
           Se déconnecter
         </button>
@@ -116,39 +115,75 @@
       <!-- Informations du blog -->
       <section class="bg-white p-6 rounded-lg shadow-md mb-6">
         <h2 class="text-2xl font-bold mb-4">Informations du blog</h2>
+        <p class="text-gray-600 mb-4">Ces informations apparaissent en haut de votre blog</p>
+        
         <div class="mb-4">
           <label for="blog-title" class="block font-semibold mb-2">Titre du blog</label>
           <input 
             type="text" 
             id="blog-title" 
-            placeholder="Titre du blog" 
-            class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Le blog de Ti Racoon" 
+            class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
           >
         </div>
+        
         <div class="mb-4">
           <label for="blog-subtitle" class="block font-semibold mb-2">Sous-titre</label>
           <input 
             type="text" 
             id="blog-subtitle" 
-            placeholder="Sous-titre" 
+            placeholder="Partagez vos idées avec le monde" 
             class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
         </div>
+        
         <div class="mb-4">
           <label for="blog-intro" class="block font-semibold mb-2">Présentation du blog</label>
           <textarea 
             id="blog-intro" 
-            placeholder="Présentation du blog" 
+            placeholder="Bienvenue sur mon blog !" 
             rows="3"
             class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           ></textarea>
         </div>
+        
         <button 
           id="save-blog-info" 
-          class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 font-semibold"
+          class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-semibold"
         >
           Sauvegarder les informations du blog
         </button>
+      </section>
+
+      <!-- Gérer les catégories -->
+      <section class="bg-white p-6 rounded-lg shadow-md mb-6">
+        <h2 class="text-2xl font-bold mb-4">Gérer les catégories</h2>
+        <p class="text-gray-600 mb-4">Les catégories permettent d'organiser vos articles</p>
+        
+        <div class="mb-4">
+          <label for="new-category" class="block font-semibold mb-2">Ajouter une nouvelle catégorie</label>
+          <div class="flex gap-2">
+            <input 
+              type="text" 
+              id="new-category" 
+              placeholder="Nom de la catégorie (ex: FALC, vidéos...)" 
+              class="flex-1 p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+            <button 
+              id="add-category-btn"
+              class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+        
+        <div class="mb-4">
+          <h3 class="font-semibold mb-2">Catégories existantes</h3>
+          <div id="categories-list" class="flex flex-wrap gap-2">
+            <!-- Catégories affichées ici -->
+          </div>
+        </div>
       </section>
 
       <!-- Ajouter un article -->
@@ -157,13 +192,24 @@
         <form id="article-form">
           
           <div class="mb-4">
+            <label for="article-category" class="block font-semibold mb-2">Catégorie *</label>
+            <select 
+              id="article-category" 
+              required
+              class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Choisir une catégorie</option>
+              <!-- Options générées dynamiquement -->
+            </select>
+          </div>
+
+          <div class="mb-4">
             <label for="article-title" class="block font-semibold mb-2">Titre de l'article *</label>
             <input 
               type="text" 
               id="article-title" 
-              name="title" 
               required 
-              placeholder="Titre de l'article"
+              placeholder="Mon super article"
               class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
             >
           </div>
@@ -173,8 +219,7 @@
             <input 
               type="text" 
               id="article-subtitle" 
-              name="subtitle" 
-              placeholder="Sous-titre de l'article"
+              placeholder="Un sous-titre accrocheur"
               class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
           </div>
@@ -184,7 +229,6 @@
             <input 
               type="url" 
               id="article-image" 
-              name="mainImageUrl" 
               placeholder="https://exemple.com/image.jpg"
               class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -195,25 +239,24 @@
             <input 
               type="text" 
               id="article-image-alt" 
-              name="mainImageAlt" 
               placeholder="Décrivez ce que montre l'image"
               class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-            <p class="text-sm text-gray-600 mt-1">Important pour l'accessibilité : décrivez précisément ce que montre l'image</p>
+            <p class="text-sm text-gray-600 mt-1">Important pour l'accessibilité</p>
           </div>
 
           <div class="mb-4">
             <label for="article-content" class="block font-semibold mb-2">Contenu de l'article *</label>
+            
             <p class="text-sm text-gray-600 mb-2">
-              Écrivez directement votre article ci-dessous. Utilisez les outils de mise en forme. 
-              Vous pouvez copier-coller depuis Word !
+              Écrivez directement votre article ci-dessous. Vous pouvez copier-coller depuis Word !
             </p>
             
             <!-- Éditeur Quill -->
             <div id="editor-container" class="border rounded"></div>
             
             <!-- Champ caché pour stocker le HTML -->
-            <input type="hidden" id="article-content-hidden" name="content">
+            <input type="hidden" id="article-content-hidden">
           </div>
 
           <div class="mb-6">
@@ -221,7 +264,6 @@
             <input 
               type="text" 
               id="article-tags" 
-              name="tags" 
               placeholder="accessibilité, technologie, société"
               class="w-full p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -230,7 +272,7 @@
 
           <button 
             type="submit" 
-            class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-semibold text-lg"
+            class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold text-lg"
           >
             Publier l'article
           </button>
@@ -241,7 +283,7 @@
       <section class="bg-white p-6 rounded-lg shadow-md">
         <h2 class="text-2xl font-bold mb-4">Articles existants</h2>
         <div id="articles-list" class="space-y-3">
-          <p class="text-gray-500">Chargement des articles...</p>
+          <p class="text-gray-500">Chargement...</p>
         </div>
       </section>
 
