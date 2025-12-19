@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, doc, getDocs, deleteDoc, Timestamp, setDoc } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.6.0/firebase-auth.js";
 
 // Configuration Firebase
@@ -32,6 +32,12 @@ const blogSubtitleInput = document.getElementById("blog-subtitle");
 const blogIntroInput = document.getElementById("blog-intro");
 const saveBlogInfoBtn = document.getElementById("save-blog-info");
 
+// Éléments pour les catégories
+const newCategoryInput = document.getElementById("new-category");
+const addCategoryBtn = document.getElementById("add-category-btn");
+const categoriesListDiv = document.getElementById("categories-list");
+const articleCategorySelect = document.getElementById("article-category");
+
 // Initialisation de l'éditeur Quill
 let quill;
 window.addEventListener('DOMContentLoaded', () => {
@@ -49,6 +55,9 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
+// Catégories par défaut
+const DEFAULT_CATEGORIES = ["notes", "brèves", "FALC", "contributions", "vidéos"];
 
 // Fonction pour afficher un message de statut
 function showStatus(message, isError = false) {
@@ -112,6 +121,7 @@ onAuthStateChanged(auth, user => {
     adminPanel.style.display = "block";
     loadArticles();
     loadBlogInfo();
+    loadCategories();
   } else {
     loginSection.style.display = "block";
     adminPanel.style.display = "none";
@@ -149,6 +159,152 @@ saveBlogInfoBtn.addEventListener("click", async () => {
   }
 });
 
+// Charger les catégories
+async function loadCategories() {
+  try {
+    const categoriesRef = doc(db, "settings", "categories");
+    const categoriesDoc = await getDocs(collection(db, "settings"));
+    
+    let categories = DEFAULT_CATEGORIES;
+    
+    // Chercher le document des catégories
+    categoriesDoc.forEach(docSnap => {
+      if (docSnap.id === "categories") {
+        categories = docSnap.data().list || DEFAULT_CATEGORIES;
+      }
+    });
+    
+    // Si aucune catégorie n'existe, créer le document avec les catégories par défaut
+    if (categoriesDoc.empty || !categoriesDoc.docs.some(d => d.id === "categories")) {
+      await setDoc(doc(db, "settings", "categories"), {
+        list: DEFAULT_CATEGORIES
+      });
+    }
+    
+    displayCategories(categories);
+    updateCategorySelect(categories);
+    
+  } catch (err) {
+    console.error("Erreur chargement catégories:", err);
+    displayCategories(DEFAULT_CATEGORIES);
+    updateCategorySelect(DEFAULT_CATEGORIES);
+  }
+}
+
+// Afficher les catégories
+function displayCategories(categories) {
+  categoriesListDiv.innerHTML = "";
+  
+  categories.forEach(category => {
+    const categoryDiv = document.createElement("div");
+    categoryDiv.classList.add("flex", "items-center", "gap-2", "px-3", "py-2", "bg-blue-100", "text-blue-800", "rounded-full");
+    
+    const categoryText = document.createElement("span");
+    categoryText.textContent = category;
+    categoryText.classList.add("font-semibold");
+    
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "×";
+    deleteBtn.classList.add("text-red-600", "hover:text-red-800", "font-bold", "text-xl", "leading-none");
+    deleteBtn.setAttribute("aria-label", `Supprimer la catégorie ${category}`);
+    deleteBtn.addEventListener("click", () => deleteCategory(category, categories));
+    
+    categoryDiv.appendChild(categoryText);
+    categoryDiv.appendChild(deleteBtn);
+    categoriesListDiv.appendChild(categoryDiv);
+  });
+}
+
+// Mettre à jour le select des catégories dans le formulaire
+function updateCategorySelect(categories) {
+  articleCategorySelect.innerHTML = '<option value="">Choisir une catégorie</option>';
+  
+  categories.forEach(category => {
+    const option = document.createElement("option");
+    option.value = category;
+    option.textContent = category;
+    articleCategorySelect.appendChild(option);
+  });
+}
+
+// Ajouter une catégorie
+addCategoryBtn.addEventListener("click", async () => {
+  const newCategory = newCategoryInput.value.trim();
+  
+  if (!newCategory) {
+    showStatus("⚠ Veuillez entrer un nom de catégorie.", true);
+    return;
+  }
+  
+  try {
+    const categoriesRef = doc(db, "settings", "categories");
+    const categoriesDoc = await getDocs(collection(db, "settings"));
+    
+    let categories = DEFAULT_CATEGORIES;
+    
+    categoriesDoc.forEach(docSnap => {
+      if (docSnap.id === "categories") {
+        categories = docSnap.data().list || DEFAULT_CATEGORIES;
+      }
+    });
+    
+    if (categories.includes(newCategory)) {
+      showStatus("⚠ Cette catégorie existe déjà.", true);
+      return;
+    }
+    
+    categories.push(newCategory);
+    
+    await setDoc(categoriesRef, {
+      list: categories
+    });
+    
+    showStatus(`✓ Catégorie "${newCategory}" ajoutée !`);
+    newCategoryInput.value = "";
+    displayCategories(categories);
+    updateCategorySelect(categories);
+    
+  } catch (err) {
+    console.error("Erreur ajout catégorie:", err);
+    showStatus("❌ Erreur lors de l'ajout : " + err.message, true);
+  }
+});
+
+// Supprimer une catégorie
+async function deleteCategory(categoryToDelete, currentCategories) {
+  if (!confirm(`Êtes-vous sûr de vouloir supprimer la catégorie "${categoryToDelete}" ?\n\nLes articles de cette catégorie passeront en "notes".`)) {
+    return;
+  }
+  
+  try {
+    const newCategories = currentCategories.filter(cat => cat !== categoryToDelete);
+    
+    await setDoc(doc(db, "settings", "categories"), {
+      list: newCategories
+    });
+    
+    // Mettre à jour les articles qui avaient cette catégorie
+    const articlesSnapshot = await getDocs(collection(db, "articles"));
+    articlesSnapshot.forEach(async (articleDoc) => {
+      const article = articleDoc.data();
+      if (article.category === categoryToDelete) {
+        await updateDoc(doc(db, "articles", articleDoc.id), {
+          category: "notes"
+        });
+      }
+    });
+    
+    showStatus(`✓ Catégorie "${categoryToDelete}" supprimée. Les articles ont été reclassés en "notes".`);
+    displayCategories(newCategories);
+    updateCategorySelect(newCategories);
+    loadArticles();
+    
+  } catch (err) {
+    console.error("Erreur suppression catégorie:", err);
+    showStatus("❌ Erreur lors de la suppression : " + err.message, true);
+  }
+}
+
 // Ajouter un article
 articleForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -159,8 +315,15 @@ articleForm.addEventListener("submit", async (e) => {
     
     // Validation
     const title = document.getElementById("article-title").value.trim();
+    const category = document.getElementById("article-category").value;
+    
     if (!title) {
       showStatus("⚠ Le titre de l'article est obligatoire.", true);
+      return;
+    }
+    
+    if (!category) {
+      showStatus("⚠ Veuillez choisir une catégorie.", true);
       return;
     }
     
@@ -170,6 +333,7 @@ articleForm.addEventListener("submit", async (e) => {
     }
     
     const data = {
+      category: category,
       title: title,
       subtitle: document.getElementById("article-subtitle").value.trim(),
       content: content,
@@ -221,6 +385,10 @@ async function loadArticles() {
       titleSpan.textContent = article.title;
       titleSpan.classList.add("font-semibold", "text-lg", "block", "mb-1");
       
+      const categorySpan = document.createElement("span");
+      categorySpan.textContent = `Catégorie: ${article.category || "notes"}`;
+      categorySpan.classList.add("text-sm", "text-blue-600", "block", "mb-1");
+      
       const dateSpan = document.createElement("span");
       if (article.date) {
         const dateObj = article.date.toDate ? article.date.toDate() : new Date(article.date);
@@ -233,6 +401,7 @@ async function loadArticles() {
       dateSpan.classList.add("text-sm", "text-gray-500");
       
       infoDiv.appendChild(titleSpan);
+      infoDiv.appendChild(categorySpan);
       infoDiv.appendChild(dateSpan);
       
       const deleteBtn = document.createElement("button");
