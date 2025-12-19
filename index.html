@@ -36,6 +36,83 @@
       background-color: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
     }
+    
+    /* Styles pour les cartes d'articles */
+    .article-card {
+      transition: transform 0.2s, box-shadow 0.2s;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .article-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .article-card img {
+      object-fit: cover;
+      height: 200px;
+      width: 100%;
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background-color: white;
+      margin: 2rem;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    
+    .close-modal {
+      position: sticky;
+      top: 0;
+      float: right;
+      font-size: 2rem;
+      font-weight: bold;
+      cursor: pointer;
+      background: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      z-index: 10;
+    }
+    
+    .close-modal:hover,
+    .close-modal:focus {
+      color: #dc2626;
+    }
+    
+    /* Catégories */
+    .category-btn {
+      transition: all 0.2s;
+    }
+    
+    .category-btn.active {
+      background-color: #3b82f6;
+      color: white;
+    }
   </style>
 </head>
 <body class="pride-bg min-h-screen">
@@ -43,14 +120,26 @@
   <!-- Header -->
   <header class="content-overlay shadow-md">
     <div class="container mx-auto px-4 py-6">
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
         <div>
-          <h1 id="blog-title" class="text-4xl font-bold text-gray-900">Ti Racoon Blog</h1>
+          <h1 id="blog-title" class="text-4xl font-bold text-gray-900">Le blog de Ti Racoon</h1>
           <p id="blog-subtitle" class="text-xl text-gray-700 mt-1">Partagez vos idées avec le monde</p>
         </div>
-        <a href="admin.html" id="admin-link" class="hidden px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+        <a href="admin.html" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
           Administration
         </a>
+      </div>
+      
+      <!-- Recherche en haut -->
+      <div class="max-w-2xl">
+        <label for="search-input" class="block font-semibold mb-2 text-gray-900">Rechercher un article</label>
+        <input 
+          type="text" 
+          id="search-input" 
+          placeholder="Rechercher par titre, contenu ou tag..." 
+          class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          aria-label="Rechercher un article"
+        >
       </div>
     </div>
   </header>
@@ -62,7 +151,15 @@
     </p>
   </section>
 
-  <!-- Conteneur principal avec sidebar et articles -->
+  <!-- Catégories -->
+  <section class="content-overlay mt-6 mx-4 md:mx-8 p-6 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold mb-4 text-gray-900">Catégories</h2>
+    <div id="categories-list" class="flex flex-wrap gap-3">
+      <!-- Catégories générées dynamiquement -->
+    </div>
+  </section>
+
+  <!-- Conteneur principal -->
   <div class="container mx-auto px-4 py-6">
     <div class="flex flex-col lg:flex-row gap-6">
       
@@ -70,21 +167,9 @@
       <aside class="lg:w-64 flex-shrink-0">
         <div class="content-overlay p-4 rounded-lg shadow-md sticky top-4">
           
-          <!-- Recherche -->
-          <div class="mb-6">
-            <label for="search-input" class="block font-semibold mb-2 text-gray-900">Rechercher</label>
-            <input 
-              type="text" 
-              id="search-input" 
-              placeholder="Rechercher un article…" 
-              class="w-full p-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Rechercher un article"
-            >
-          </div>
-
           <!-- Nuage de tags -->
           <div class="mb-6">
-            <h2 class="font-semibold mb-2 text-gray-900">Tags</h2>
+            <h2 class="font-semibold mb-3 text-gray-900 text-lg">Tags</h2>
             <div id="tags-cloud" class="flex flex-wrap gap-2">
               <!-- Tags générés dynamiquement -->
             </div>
@@ -102,23 +187,47 @@
               <option value="oldest">Les plus anciens</option>
             </select>
           </div>
+          
+          <!-- Bouton reset filtres -->
+          <button 
+            id="reset-filters"
+            class="w-full px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+          >
+            Réinitialiser les filtres
+          </button>
 
         </div>
       </aside>
 
-      <!-- Articles -->
+      <!-- Grille d'articles -->
       <main class="flex-1">
         <div id="loading" class="content-overlay p-6 rounded-lg shadow-md text-center">
           <p class="text-gray-600">Chargement des articles...</p>
         </div>
-        <div id="articles" class="space-y-6">
-          <!-- Articles générés dynamiquement -->
+        
+        <div id="current-filter" class="mb-4 hidden">
+          <p class="text-gray-700 font-semibold"></p>
         </div>
+        
+        <div id="articles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Articles en cartes générés dynamiquement -->
+        </div>
+        
         <div id="no-articles" class="content-overlay p-6 rounded-lg shadow-md text-center hidden">
-          <p class="text-gray-600">Aucun article pour le moment.</p>
+          <p class="text-gray-600">Aucun article trouvé.</p>
         </div>
       </main>
 
+    </div>
+  </div>
+
+  <!-- Modal pour afficher l'article complet -->
+  <div id="article-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <button class="close-modal" aria-label="Fermer">&times;</button>
+      <div id="modal-body">
+        <!-- Contenu de l'article injecté ici -->
+      </div>
     </div>
   </div>
 
